@@ -1,0 +1,17 @@
+{
+  "nav_type": "none",
+  "name": "Ускоритель времени видео",
+  "short_name": "Ускоритель",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme-color": "#121212",
+  "theme_color": "#121212",
+"icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}

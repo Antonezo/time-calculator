@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Калькулятор времени видео</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 20px; 
+      background-color: #121212; 
+      color: #e0e0e0; 
+      display: flex; 
+      justify-content: center; 
+    }
+    .container { 
+      background: #1e1e1e; 
+      padding: 25px; 
+      border-radius: 16px; 
+      width: 100%; 
+      max-width: 380px; 
+      box-shadow: 0 15px 25px rgba(0,0,0,0.5); 
+      border: 1px solid #333;
+    }
+    h2 { margin-top: 0; color: #ffffff; letter-spacing: 0.5px; }
+    
+    .input-group { margin-bottom: 25px; }
+    label { display: block; margin-bottom: 10px; font-weight: 600; color: #a0a0a0; font-size: 14px;}
+    
+    .controls { display: flex; gap: 15px; align-items: center; }
+    
+    .time-inputs { 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+    .time-inputs span { font-size: 13px; color: #888; }
+    
+    /* Стилизуем поля ввода под подчеркивания */
+    input[type="number"] { 
+      width: 40px; 
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #555; /* То самое подчеркивание */
+      border-radius: 0; 
+      color: #fff;
+      font-size: 16px; 
+      text-align: center; 
+      outline: none;
+      padding: 4px 0;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    
+    /* Подсветка при клике на поле */
+    input[type="number"]:focus {
+      border-bottom: 2px solid #bb86fc;
+      color: #bb86fc;
+    }
+
+    #speedInput { width: 50px; }
+    
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    
+    input[type="range"] { 
+      flex-grow: 1; 
+      cursor: pointer; 
+      accent-color: #bb86fc; 
+    }
+    
+    .result-box { 
+      background: linear-gradient(145deg, #2a2a35, #1f1f27); 
+      padding: 20px; 
+      border-radius: 12px; 
+      text-align: center; 
+      margin-top: 30px; 
+      border: 1px solid #3d3d4d;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .result-box h3 { margin: 0; color: #bb86fc; font-size: 26px; text-shadow: 0 0 10px rgba(187, 134, 252, 0.3); }
+    .result-label { font-size: 13px; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Ускоритель времени</h2>
+  
+  <div class="input-group">
+    <label>Оригинальная длительность:</label>
+    <div class="controls">
+      <input type="range" id="timeSlider" min="1" max="7200" value="1200" step="1">
+      
+      <div class="time-inputs">
+        <input type="number" id="minInput" value="20" min="0"> <span>мин</span>
+        <input type="number" id="secInput" value="0" min="0" max="59"> <span>сек</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="input-group">
+    <label>Скорость воспроизведения (x):</label>
+    <div class="controls">
+      <input type="range" id="speedSlider" min="0.1" max="5" value="2" step="0.1">
+      <input type="number" id="speedInput" value="2" min="0.1" step="0.1">
+    </div>
+  </div>
+  
+  <div class="result-box">
+    <div class="result-label">Реальное время просмотра</div>
+    <h3><span id="result">10 мин 00 сек</span></h3>
+  </div>
+</div>
+
+<script>
+  const minInput = document.getElementById('minInput');
+  const secInput = document.getElementById('secInput');
+  const timeSlider = document.getElementById('timeSlider');
+  const speedInput = document.getElementById('speedInput');
+  const speedSlider = document.getElementById('speedSlider');
+  const resultSpan = document.getElementById('result');
+
+  function calculate() {
+    const mins = parseInt(minInput.value) || 0;
+    const secs = parseInt(secInput.value) || 0;
+    const speed = parseFloat(speedInput.value);
+    const totalOriginalSeconds = (mins * 60) + secs;
+
+    if (speed > 0 && totalOriginalSeconds >= 0) {
+      const realTotalSeconds = totalOriginalSeconds / speed;
+      let outMins = Math.floor(realTotalSeconds / 60);
+      let outSecs = Math.round(realTotalSeconds % 60);
+
+      if (outSecs === 60) {
+        outMins += 1;
+        outSecs = 0;
+      }
+
+      const formattedSecs = outSecs < 10 ? '0' + outSecs : outSecs;
+      resultSpan.textContent = `${outMins} мин ${formattedSecs} сек`;
+    } else {
+      resultSpan.textContent = "—";
+    }
+  }
+
+  // Обновляем поля, если тянем ползунок
+  timeSlider.addEventListener('input', () => {
+    const totalSecs = parseInt(timeSlider.value);
+    minInput.value = Math.floor(totalSecs / 60);
+    secInput.value = totalSecs % 60;
+    calculate();
+  });
+
+  // Обновляем ползунок, если вводим минуты руками
+  minInput.addEventListener('input', () => {
+    if (minInput.value < 0) minInput.value = 0; // Блокируем минус
+    syncTimeInputsToSlider();
+  });
+
+  // Обновляем ползунок, если вводим секунды руками + жесткая валидация
+  secInput.addEventListener('input', () => {
+    let val = parseInt(secInput.value);
+    // Главная фишка: не даем ввести больше 59 и меньше 0
+    if (val > 59) secInput.value = 59;
+    if (val < 0) secInput.value = 0;
+    syncTimeInputsToSlider();
+  });
+
+  function syncTimeInputsToSlider() {
+    const m = parseInt(minInput.value) || 0;
+    const s = parseInt(secInput.value) || 0;
+    timeSlider.value = (m * 60) + s;
+    calculate();
+  }
+
+  speedSlider.addEventListener('input', () => {
+    speedInput.value = speedSlider.value;
+    calculate();
+  });
+  
+  speedInput.addEventListener('input', () => {
+    if (speedInput.value < 0.1) speedInput.value = 0.1; // Не даем остановить время
+    speedSlider.value = speedInput.value;
+    calculate();
+  });
+</script>
+
+</body>
+</html>
